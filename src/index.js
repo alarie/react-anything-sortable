@@ -458,15 +458,15 @@ const Sortable = createReactClass({
       }
 
       const isPlaceHolder = _dimensionArr[index].isPlaceHolder;
-      const itemClassName = `ui-sortable-item
-                             ${isPlaceHolder && 'ui-sortable-placeholder'}
-                             ${this.state.isDragging && isPlaceHolder && 'visible'}`;
+      const itemClassName = `ui-sortable-item ${
+        isPlaceHolder ? 'ui-sortable-placeholder' : ''
+      } ${
+        (this.state.isDragging && isPlaceHolder) ? 'visible' : ''
+      }`.trim();
 
       const sortableProps = {
-        sortableClassName: `${item.props.className} ${itemClassName}`,
+        sortableClassName: `${item.props.className || ''} ${itemClassName || ''}`.trim(),
         sortableIndex: index,
-        onSortableItemReadyToMove: isPlaceHolder ? undefined : (e) => {
-          this.handleMouseDown.call(this, e, index);
         onSortableItemReadyToMove: isPlaceHolder ? undefined : (e, sortableIndex, target) => {
           this.handleMouseDown.call(this, e, index, target);
         },
@@ -511,7 +511,7 @@ const Sortable = createReactClass({
       height: this._dimensionArr[this._draggingIndex].height
     };
     return React.cloneElement(item, {
-      sortableClassName: `${item.props.className} ui-sortable-item ui-sortable-dragging`,
+      sortableClassName: `${item.props.className || ''} ui-sortable-item ui-sortable-dragging`.trim(),
       key: '_dragging',
       sortableStyle: style,
       isDragging: true,
@@ -520,7 +520,7 @@ const Sortable = createReactClass({
   },
 
   render() {
-    const className = `ui-sortable ${this.props.className || ''}`;
+    const className = `ui-sortable ${this.props.className || ''}`.trim();
 
     return (
       <div className={className}>
