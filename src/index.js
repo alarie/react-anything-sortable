@@ -41,7 +41,8 @@ const Sortable = createReactClass({
     containment: PropTypes.bool,
     dynamic: PropTypes.bool,
     direction: PropTypes.string,
-    children: PropTypes.arrayOf(PropTypes.node)
+    children: PropTypes.arrayOf(PropTypes.node),
+    dragStartDelay: PropTypes.number
   },
 
   setArrays(currentChildren) {
@@ -162,16 +163,33 @@ const Sortable = createReactClass({
    * @param  {object} e     React event
    * @param  {numbner} index index of pre-dragging item
    */
-  handleMouseDown(e, index) {
-    this._draggingIndex = index;
-    this._prevX = (e.pageX || e.clientX);
-    this._prevY = (e.pageY || e.clientY);
-    this._initOffset = e.offset;
-    this._isReadyForDragging = true;
-    this._hasInitDragging = false;
+  handleMouseDown(e, index, target) {
+    const startDrag = () => {
+      this._draggingIndex = index;
+      this._prevX = (e.pageX || e.clientX);
+      this._prevY = (e.pageY || e.clientY);
+      this._initOffset = e.offset;
+      this._isReadyForDragging = true;
+      this._hasInitDragging = false;
 
-    // start listening mousemove and mouseup
-    this.bindEvent();
+      // start listening mousemove and mouseup
+      this.bindEvent();
+    };
+
+    if (this.props.dragStartTimeout) {
+  	                                                                                                                                                                                                                                                  this._dragStartTimeout = setTimeout(
+        () => startDrag(),
+        this.props.dragStartTimeout
+      );
+      const that = this;
+			                                                                                                                                                                                                                                                                                                                                                                        target.addEventListener('mouseup', function handler() {
+				                                                                                                                        target.removeEventListener('mouseup', handler, true);
+				                                                                                                                        clearTimeout(that.dragStartTimeout);
+			}, true);
+    }
+    else {
+      startDrag();
+    }
   },
 
   /**
@@ -449,6 +467,8 @@ const Sortable = createReactClass({
         sortableIndex: index,
         onSortableItemReadyToMove: isPlaceHolder ? undefined : (e) => {
           this.handleMouseDown.call(this, e, index);
+        onSortableItemReadyToMove: isPlaceHolder ? undefined : (e, sortableIndex, target) => {
+          this.handleMouseDown.call(this, e, index, target);
         },
         onSortableItemMount: this.handleChildUpdate,
         sortHandle: this.props.sortHandle

@@ -14,11 +14,11 @@ function handleSortableItemReadyToMove(e) {
   const evt = {
     pageX: (e.pageX || e.clientX || e.touches[0].pageX),
     pageY: (e.pageY || e.clientY || e.touches[0].pageY),
-    offset: position(target)
+    offset: position(target),
   };
 
   if (this.props.onSortableItemReadyToMove) {
-    this.props.onSortableItemReadyToMove(evt, this.props.sortableIndex);
+    this.props.onSortableItemReadyToMove(evt, this.props.sortableIndex, target);
   }
 }
 
@@ -102,7 +102,7 @@ export default (Component) => {
           ...rest } = this.props;
         return (
           <Component {...rest}
-            sortable={true}
+            sortable
             className={sortableClassName}
             style={sortableStyle}
             sortHandle={sortHandle}
