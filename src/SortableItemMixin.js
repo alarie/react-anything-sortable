@@ -85,6 +85,11 @@ export default (Component) => {
         sortHandle: PropTypes.string
       };
 
+      constructor(props) {
+        super(props);
+        this.handleSortableItemReadyToMove = this.handleSortableItemReadyToMove.bind(this);
+      }
+
       handleSortableItemReadyToMove(e) {
         handleSortableItemReadyToMove.call(this, e);
       }
@@ -98,16 +103,25 @@ export default (Component) => {
       }
 
       render() {
-        const { sortableClassName, sortableStyle, sortableIndex, sortHandle, className,
-          ...rest } = this.props;
+        const {
+          /* eslint-disable */
+          className,
+          sortableIndex,
+          /* eslint-enable */
+          sortableClassName,
+          sortableStyle,
+          sortHandle,
+          ...rest
+        } = this.props;
+
         return (
           <Component {...rest}
             sortable
             className={sortableClassName}
             style={sortableStyle}
             sortHandle={sortHandle}
-            onMouseDown={::this.handleSortableItemReadyToMove}
-            onTouchStart={::this.handleSortableItemReadyToMove}
+            onMouseDown={this.handleSortableItemReadyToMove}
+            onTouchStart={this.handleSortableItemReadyToMove}
           />
         );
       }

@@ -15,6 +15,18 @@ import { on, off, isFunction, isNumeric, position, closest, get,
         assign, findMostOften } from './utils';
 import SortableItemMixin from './SortableItemMixin';
 
+function getScrollParent(node) {
+  if (node === null) {
+    return null;
+  }
+
+  if (node.scrollHeight > node.clientHeight) {
+    return node;
+  }
+
+  return getScrollParent(node.parentNode);
+}
+
 const doc = typeof window === 'object' ? window.document : {};
 
 
@@ -37,6 +49,7 @@ const Sortable = createReactClass({
      */
     onSort: PropTypes.func,
     className: PropTypes.string,
+    tagName: PropTypes.string,
     sortHandle: PropTypes.string,
     containment: PropTypes.bool,
     dynamic: PropTypes.bool,
@@ -79,8 +92,11 @@ const Sortable = createReactClass({
     const container = ReactDOM.findDOMNode(this);
     const rect = container.getBoundingClientRect();
 
-    const scrollTop = (doc.docElement && doc.docElement.scrollTop) || doc.body.scrollTop;
-    const scrollLeft = (doc.docElement && doc.docElement.scrollLeft) || doc.body.scrollLeft;
+    const scrollTop = getScrollParent(container) ||
+      (doc.docElement && doc.docElement.scrollTop) ||
+      doc.body.scrollTop;
+    const scrollLeft = (doc.docElement && doc.docElement.scrollLeft) ||
+      doc.body.scrollLeft;
 
     this._top = rect.top + scrollTop;
     this._left = rect.left + scrollLeft;
@@ -164,11 +180,17 @@ const Sortable = createReactClass({
    * @param  {numbner} index index of pre-dragging item
    */
   handleMouseDown(e, index, target) {
+    const container = ReactDOM.findDOMNode(this);
+    const scrollParent = getScrollParent(container);
+
     const startDrag = () => {
       this._draggingIndex = index;
       this._prevX = (e.pageX || e.clientX);
       this._prevY = (e.pageY || e.clientY);
       this._initOffset = e.offset;
+      this._initScrollOffset = {
+        scrollTop: scrollParent.scrollTop
+      };
       this._isReadyForDragging = true;
       this._hasInitDragging = false;
 
@@ -176,18 +198,17 @@ const Sortable = createReactClass({
       this.bindEvent();
     };
 
-    if (this.props.dragStartTimeout) {
-  	                                                                                                                                                                                                                                                  this._dragStartTimeout = setTimeout(
+    if (this.props.dragStartDelay) {
+      this._dragStartTimeout = setTimeout(
         () => startDrag(),
-        this.props.dragStartTimeout
+        this.props.dragStartDelay
       );
       const that = this;
-			                                                                                                                                                                                                                                                                                                                                                                        target.addEventListener('mouseup', function handler() {
-				                                                                                                                        target.removeEventListener('mouseup', handler, true);
-				                                                                                                                        clearTimeout(that.dragStartTimeout);
-			}, true);
-    }
-    else {
+      target.addEventListener('mouseup', function handler() {
+        target.removeEventListener('mouseup', handler, true);
+        clearTimeout(that._dragStartTimeout);
+      }, true);
+    } else {
       startDrag();
     }
   },
@@ -226,7 +247,8 @@ const Sortable = createReactClass({
       isDragging: true,
       top: this.props.direction === 'horizontal' ? this._initOffset.top : newOffset.top,
       left: this.props.direction === 'vertical' ? this._initOffset.left : newOffset.left,
-      placeHolderIndex: newIndex
+      placeHolderIndex: newIndex,
+      scrollTop: newOffset.scrollTop,
     });
 
     this._prevX = (e.pageX || e.clientX);
@@ -358,17 +380,21 @@ const Sortable = createReactClass({
    * @return {object}   {left: 1, top: 1}
    */
   calculateNewOffset(e) {
+    const container = ReactDOM.findDOMNode(this);
+
     const deltaX = this._prevX - (e.pageX || e.clientX);
     const deltaY = this._prevY - (e.pageY || e.clientY);
 
     const prevLeft = this.state.left !== null ? this.state.left : this._initOffset.left;
     const prevTop = this.state.top !== null ? this.state.top : this._initOffset.top;
     const newLeft = prevLeft - deltaX;
+
     const newTop = prevTop - deltaY;
 
     return {
       left: newLeft,
-      top: newTop
+      top: newTop,
+      scrollTop: getScrollParent(container).scrollTop - this._initScrollOffset.scrollTop
     };
   },
 
@@ -505,13 +531,16 @@ const Sortable = createReactClass({
     }
 
     const style = {
-      top: this.state.top,
+      top: this.state.top + this.state.scrollTop,
       left: this.state.left,
       width: this._dimensionArr[this._draggingIndex].width,
       height: this._dimensionArr[this._draggingIndex].height
     };
+
     return React.cloneElement(item, {
-      sortableClassName: `${item.props.className || ''} ui-sortable-item ui-sortable-dragging`.trim(),
+      sortableClassName: `${
+        item.props.className || ''
+      } ui-sortable-item ui-sortable-dragging`.trim(),
       key: '_dragging',
       sortableStyle: style,
       isDragging: true,
@@ -521,11 +550,11 @@ const Sortable = createReactClass({
 
   render() {
     const className = `ui-sortable ${this.props.className || ''}`.trim();
-
+    const Tag = this.props.tagName || 'div';
     return (
-      <div className={className}>
+      <Tag className={className}>
         {this.renderItems()}
-      </div>
+      </Tag>
     );
   }
 });

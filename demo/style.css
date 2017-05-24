@@ -209,6 +209,8 @@ a.active {
   width: 200px;
   padding: 10px;
   border: 1px #ccc solid;
+  height: 100px;
+  overflow: auto;
 }
 
 .vertical.ui-sortable-item {
