@@ -189,7 +189,7 @@ const Sortable = createReactClass({
       this._prevY = (e.pageY || e.clientY);
       this._initOffset = e.offset;
       this._initScrollOffset = {
-        scrollTop: scrollParent.scrollTop
+        scrollTop: scrollParent ? scrollParent.scrollTop : 0
       };
       this._isReadyForDragging = true;
       this._hasInitDragging = false;
