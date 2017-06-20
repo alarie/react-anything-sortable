@@ -391,10 +391,12 @@ const Sortable = createReactClass({
 
     const newTop = prevTop - deltaY;
 
+    const scrollParent = getScrollParent(container);
+
     return {
       left: newLeft,
       top: newTop,
-      scrollTop: getScrollParent(container).scrollTop - this._initScrollOffset.scrollTop
+      scrollTop: scrollParent ? (scrollParent.scrollTop - this._initScrollOffset.scrollTop) : 0
     };
   },
 
